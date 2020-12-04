@@ -5,6 +5,8 @@ GLIB: Efficient Exploration for Relational Model-Based Reinforcement Learning vi
 Rohan Chitnis*, Tom Silver*, Joshua Tenenbaum, Leslie Pack Kaelbling, Tomás Lozano-Pérez.
 AAAI 2021.
 
+For any questions or issues with the code, please email <ronuchit@mit.edu> and <tslvr@mit.edu>.
+
 Link to paper: https://arxiv.org/abs/2001.08299
 
 Instructions for running:
