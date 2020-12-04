@@ -1,9 +1,8 @@
-This repository houses code for the paper:
+This repository houses code for the AAAI 2021 paper:
 
 GLIB: Efficient Exploration for Relational Model-Based Reinforcement Learning via Goal-Literal Babbling
 
 Rohan Chitnis*, Tom Silver*, Joshua Tenenbaum, Leslie Pack Kaelbling, Tomás Lozano-Pérez.
-AAAI 2021.
 
 For any questions or issues with the code, please email <ronuchit@mit.edu> and <tslvr@mit.edu>.
 
