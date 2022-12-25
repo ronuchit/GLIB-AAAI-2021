@@ -108,7 +108,7 @@ class BaseCuriosityModule:
         """
         if ac.learning_name == "TILDE":
             return self._get_predicted_next_state(state, action)
-        elif ac.learning_name == "LNDR":
+        elif ac.learning_name in ("LNDR", "LLM+LNDR"):
             for act_pred, ndrs in self._operator_learning_module._ndrs.items():
                 if act_pred.name != action.predicate.name:
                     continue

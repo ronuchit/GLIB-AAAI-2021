@@ -1,12 +1,14 @@
 import numpy as np
 from settings import AgentConfig as ac
-from pddlgym.parser import Operator
+from pddlgym.parser import Operator, PDDLDomainParser
 from pddlgym.structs import Predicate, Literal, LiteralConjunction, NULLTYPE
 from ndr.learn import run_main_search as learn_ndrs
 from ndr.learn import get_transition_likelihood, print_rule_set
 from ndr.ndrs import NOISE_OUTCOME
+import openai
 
 from collections import defaultdict
+import tempfile
 
 
 class ZPKOperatorLearningModule:
@@ -124,10 +126,189 @@ class LLMZPKOperatorLearningModule(ZPKOperatorLearningModule):
         return super().learn()
 
     def _create_prompt(self):
-        import ipdb; ipdb.set_trace()
+        # TODO: use ac.train_env to extract predicates, operator names, and
+        # create this prompt automatically.
+        """"""
+        assert self._domain_name == "Glibblocks"
+        # reference: https://github.com/tomsilver/pddlgym/tree/master/pddlgym/pddl/glibblocks.pddl
+        prompt = """# Fill in the <TODO> to complete the PDDL domain.
+        
+        (define (domain glibblocks)
+    (:requirements :strips :typing)
+    (:types block robot)
+    (:predicates 
+        (on ?x - block ?y - block)
+        (ontable ?x - block)
+        (clear ?x - block)
+        (handempty ?x - robot)
+        (handfull ?x - robot)
+        (holding ?x - block)
+        (pickup ?x - block)
+        (putdown ?x - block)
+        (stack ?x - block ?y - block)
+        (unstack ?x - block)
+    )
+
+    ; (:actions pickup putdown stack unstack)
+
+    (:action pick-up
+        :parameters (?x - block <TODO>)
+        :precondition (and
+            (pickup ?x) 
+            <TODO>
+        )
+        :effect (and
+            <TODO>
+        )
+    )
+
+    (:action put-down
+        :parameters (?x - block <TODO>)
+        :precondition (and 
+            (putdown ?x)
+            <TODO>
+        )
+        :effect (and 
+            <TODO>
+        )
+
+    (:action stack
+        :parameters (?x - block ?y - block <TODO>)
+        :precondition (and
+            (stack ?x ?y)
+            <TODO>
+        )
+        :effect (and 
+            <TODO>
+        )
+    )
+
+    (:action unstack
+        :parameters (?x - block <TODO>)
+        :precondition (and
+            (unstack ?x)
+            <TODO>
+        )
+        :effect (and 
+            <TODO>
+        )
+    )
+)"""
+
+        return prompt
 
     def _query_llm(self, prompt):
-        import ipdb; ipdb.set_trace()
+        # TODO cache and make settings
+        # reference: https://github.com/Learning-and-Intelligent-Systems/llm4pddl/blob/main/llm4pddl/llm_interface.py
+
+        # TODO: uncomment. Leaving commented for now to avoid spurious queries
+        # of the expensive open AI API. Also we might want to use ChatGPT instead...
+        # completion = openai.Completion.create(
+        #     engine="code-davinci-002",
+        #     prompt=prompt,
+        #     max_tokens=500,
+        #     temperature=0,
+        # )
+        # response = completion.choices[0].text
+
+        # This is a response from ChatGPT (manually collected)
+        response = """(define (domain glibblocks)
+(:requirements :strips :typing)
+(:types block robot)
+(:predicates
+(on ?x - block ?y - block)
+(ontable ?x - block)
+(clear ?x - block)
+(handempty ?x - robot)
+(handfull ?x - robot)
+(holding ?x - block)
+(pickup ?x - block)
+(putdown ?x - block)
+(stack ?x - block ?y - block)
+(unstack ?x - block)
+)
+
+; (:actions pickup putdown stack unstack)
+
+(:action pick-up
+    :parameters (?r - robot ?x - block)
+    :precondition (and
+        (pickup ?x) 
+        (handempty ?r)
+        (clear ?x)
+    )
+    :effect (and
+        (handfull ?r)
+        (not (handempty ?r))
+        (not (clear ?x))
+        (holding ?x)
+    )
+)
+
+(:action put-down
+    :parameters (?r - robot ?x - block)
+    :precondition (and 
+        (putdown ?x)
+        (handfull ?r)
+        (holding ?x)
+    )
+    :effect (and 
+        (handempty ?r)
+        (not (handfull ?r))
+        (clear ?x)
+        (not (holding ?x))
+    )
+)
+
+(:action stack
+    :parameters (?r - robot ?x - block ?y - block)
+    :precondition (and
+        (stack ?x ?y)
+        (handfull ?r)
+        (holding ?x)
+        (clear ?y)
+    )
+    :effect (and 
+        (handempty ?r)
+        (not (handfull ?r))
+        (not (holding ?x))
+        (not (clear ?y))
+        (on ?x ?y)
+    )
+)
+
+(:action unstack
+    :parameters (?r - robot ?x - block)
+    :precondition (and
+        (unstack ?x)
+        (handempty ?r)
+        (on ?x ?y)
+    )
+    :effect (and 
+        (handfull ?r)
+        (not (handempty ?r))
+        (clear ?x)
+        (not (on ?x ?y))
+        (holding ?x)
+    )
+)
+
+)
+"""
+
+        return response
 
     def _llm_output_to_operators(self, llm_output):
-        import ipdb; ipdb.set_trace()
+        # Parse the LLM output using PDDLGym.
+        
+        # TODO: automatically handle this and other cases of malformed LLM output.
+        # In this case, we need to add a missing parameter.
+        llm_output =llm_output.replace("""(:action unstack
+    :parameters (?r - robot ?x - block)""", """(:action unstack
+    :parameters (?r - robot ?x - block ?y - block)""")
+
+        domain_fname = tempfile.NamedTemporaryFile(delete=False).name
+        with open(domain_fname, "w", encoding="utf-8") as f:
+            f.write(llm_output)
+        domain = PDDLDomainParser(domain_fname)
+        return list(domain.operators.values())
