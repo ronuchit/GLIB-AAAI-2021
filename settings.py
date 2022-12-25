@@ -36,7 +36,8 @@ class AgentConfig:
     """Agent-specific constants.
     """
     curiosity_methods_to_run = [
-        "GLIB_L2",
+        "LLM+GLIB_L2",
+        # "GLIB_L2",
         # "GLIB_G1",
         # "oracle",
         # "random",
@@ -48,8 +49,8 @@ class AgentConfig:
         # "random",
     ]
     # learning_name = "TILDE"
-    # learning_name = "LNDR"
-    learning_name = "LLM+LNDR"
+    learning_name = "LNDR"
+    # learning_name = "LLM+LNDR"
     # learning_name = "groundtruth-PDDLEnv"+EnvConfig.domain_name+"-v0"
     planner_name = {
         "Blocks": "ff",
