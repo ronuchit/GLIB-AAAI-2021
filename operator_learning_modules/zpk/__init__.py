@@ -1,1 +1,1 @@
-from .zpk_operator_learning import ZPKOperatorLearningModule
+from .zpk_operator_learning import ZPKOperatorLearningModule, LLMZPKOperatorLearningModule

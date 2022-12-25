@@ -1,4 +1,4 @@
-from .zpk import ZPKOperatorLearningModule
+from .zpk import ZPKOperatorLearningModule, LLMZPKOperatorLearningModule
 from .foldt import FOLDTOperatorLearningModule
 from .groundtruth import GroundTruthOperatorLearningModule
 
@@ -8,6 +8,8 @@ def create_operator_learning_module(operator_learning_name, learned_operators, d
         return GroundTruthOperatorLearningModule(env_name, learned_operators)
     if operator_learning_name == "LNDR":
         return ZPKOperatorLearningModule(learned_operators, domain_name)
+    if operator_learning_name == "LLM+LNDR":
+        return LLMZPKOperatorLearningModule(learned_operators, domain_name)
     if operator_learning_name == "TILDE":
         return FOLDTOperatorLearningModule(learned_operators)
     raise Exception("Unrecognized operator learning module '{}'".format(operator_learning_name))

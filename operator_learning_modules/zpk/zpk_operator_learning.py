@@ -107,3 +107,27 @@ class ZPKOperatorLearningModule:
         prediction = ndr.predict_max(state.literals, action)
         return sorted(prediction) == sorted(effects)
         # return abs(1 - self.get_probability((state.literals, action, effects))) < 1e-5
+
+
+class LLMZPKOperatorLearningModule(ZPKOperatorLearningModule):
+    """The ZPK operator learner but initialized with operators output by an LLM."""
+
+    def learn(self):
+        # Initialize the operators from the LLM. Note that we do this in
+        # learning rather than initialization because ac.train_env is created
+        # after the agent is initialized in main.py.
+        if not self._learned_operators:
+            prompt = self._create_prompt()
+            llm_output = self._query_llm(prompt)
+            operators = self._llm_output_to_operators(llm_output)
+            self._learned_operators.update(operators)
+        return super().learn()
+
+    def _create_prompt(self):
+        import ipdb; ipdb.set_trace()
+
+    def _query_llm(self, prompt):
+        import ipdb; ipdb.set_trace()
+
+    def _llm_output_to_operators(self, llm_output):
+        import ipdb; ipdb.set_trace()

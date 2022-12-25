@@ -76,7 +76,9 @@ class Runner:
     def run(self):
         """Run primitive operator learning loop.
         """
-        # MAJOR HACK. Only used by oracle_curiosity.py.
+        # MAJOR HACK. Only used by oracle_curiosity.py and by the LLM-based
+        # learner, which uses the environment to access the predicates and
+        # action names.
         ac.train_env = self.train_env
         results = []
         episode_done = True

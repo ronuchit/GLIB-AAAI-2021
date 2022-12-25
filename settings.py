@@ -37,9 +37,9 @@ class AgentConfig:
     """
     curiosity_methods_to_run = [
         "GLIB_L2",
-        "GLIB_G1",
-        "oracle",
-        "random",
+        # "GLIB_G1",
+        # "oracle",
+        # "random",
     ]
     cached_results_to_load = [
         # "GLIB_L2",
@@ -48,7 +48,8 @@ class AgentConfig:
         # "random",
     ]
     # learning_name = "TILDE"
-    learning_name = "LNDR"
+    # learning_name = "LNDR"
+    learning_name = "LLM+LNDR"
     # learning_name = "groundtruth-PDDLEnv"+EnvConfig.domain_name+"-v0"
     planner_name = {
         "Blocks": "ff",
