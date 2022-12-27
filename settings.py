@@ -50,8 +50,8 @@ class AgentConfig:
         # "random",
     ]
     # learning_name = "TILDE"
-    learning_name = "LNDR"
-    # learning_name = "LLM+LNDR"
+    # learning_name = "LNDR"
+    learning_name = "LLM+LNDR"
     # learning_name = "groundtruth-PDDLEnv"+EnvConfig.domain_name+"-v0"
     planner_name = {
         "Blocks": "ff",

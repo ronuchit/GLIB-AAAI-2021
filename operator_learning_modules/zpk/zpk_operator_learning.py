@@ -1,10 +1,10 @@
 import numpy as np
 from settings import AgentConfig as ac
-from pddlgym.parser import Operator, PDDLDomainParser
-from pddlgym.structs import Predicate, Literal, LiteralConjunction, NULLTYPE
+from pddlgym.parser import PDDLDomainParser
+from pddlgym.structs import TypedEntity, ground_literal
 from ndr.learn import run_main_search as learn_ndrs
-from ndr.learn import get_transition_likelihood, print_rule_set
-from ndr.ndrs import NOISE_OUTCOME
+from ndr.learn import get_transition_likelihood, print_rule_set, iter_variable_names
+from ndr.ndrs import NOISE_OUTCOME, NDR, NDRSet
 import openai
 
 from collections import defaultdict
@@ -123,6 +123,28 @@ class LLMZPKOperatorLearningModule(ZPKOperatorLearningModule):
             llm_output = self._query_llm(prompt)
             operators = self._llm_output_to_operators(llm_output)
             self._learned_operators.update(operators)
+            # Also need to initialize ndrs!
+            for op in operators:
+                # In initializing the learner from previous, we assume a
+                # standard variable naming scheme.
+                action = [p for p in op.preconds.literals
+                          if p.predicate in ac.train_env.action_space.predicates][0]
+                preconditions = sorted(set(op.preconds.literals) - {action})
+                effects = list(op.effects.literals)
+                variables = list(action.variables)
+                for lit in preconditions + op.effects.literals:
+                    for v in lit.variables:
+                        if v not in variables:
+                            variables.append(v)
+                sub = {old: TypedEntity(new_name, old.var_type)
+                       for old, new_name in zip(variables, iter_variable_names())}
+                action = ground_literal(action, sub)
+                preconditions = [ground_literal(l, sub) for l in preconditions]
+                effects = [ground_literal(l, sub) for l in effects]
+                ndr = NDR(action, preconditions, np.array([1.0, 0.0]), [effects, [NOISE_OUTCOME]])
+                ndrs = NDRSet(action, [ndr])
+                self._ndrs[action.predicate] = ndrs
+
         return super().learn()
 
     def _create_prompt(self):

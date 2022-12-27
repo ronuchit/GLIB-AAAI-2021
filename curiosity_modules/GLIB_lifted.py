@@ -269,7 +269,7 @@ class LLMGLIBL2CuriosityModule(GLIBL2CuriosityModule):
         self._llm_goal_actions = []
         for op in llm_operators:
             action = [p for p in op.preconds.literals
-                if p.predicate in self._action_space.predicates][0]
+                      if p.predicate in self._action_space.predicates][0]
             goal = tuple(sorted(set(op.preconds.literals) - {action}))
             self._llm_goal_actions.append((goal, action))
         super()._initialize()
