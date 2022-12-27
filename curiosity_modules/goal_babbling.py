@@ -59,7 +59,8 @@ class GoalBabblingCuriosityModule(BaseCuriosityModule):
             if not self._goal_is_valid(goal):
                 continue
 
-            print("trying goal:",goal)
+            # print("trying goal:", goal)
+            # print("from state:", state)
 
             # Create a pddl problem file with the goal and current state
             problem_fname = self._create_problem_pddl(

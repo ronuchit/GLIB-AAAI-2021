@@ -116,7 +116,27 @@ class LLMZPKOperatorLearningModule(ZPKOperatorLearningModule):
 
     def __init__(self, learned_operators, domain_name):
         super().__init__(learned_operators, domain_name)
-        # Initialize the operators from the LLM.
+
+        # # Initialize the dataset with fake transitions induced from the LLM.
+        # # Then call learning with this dataset.
+        # # If these transitions are bad, they will eventually be treated as noise.
+        # # If they are good, they will lead to nice initial operators.
+        # prompt = self._create_prompt()
+        # llm_output = self._query_llm(prompt)
+        # operators = self._llm_output_to_operators(llm_output)
+        # self._learned_operators.update(operators)
+        # # Also need to initialize ndrs!
+        # for op in operators:
+        #     action = [p for p in op.preconds.literals
+        #                 if p.predicate in ac.train_env.action_space.predicates][0]
+        #     state_lits = frozenset(op.preconds.literals) - {action}
+        #     effects = frozenset(op.effects.literals)
+        #     # TODO: Rename the variables for clarity.
+        #     self._transitions[action.predicate].append((state_lits, action, effects))
+        #     self._fits_all_data[action.predicate] = False
+        # self.learn()
+
+        # # Initialize the operators from the LLM.
         prompt = self._create_prompt()
         llm_output = self._query_llm(prompt)
         operators = self._llm_output_to_operators(llm_output)
