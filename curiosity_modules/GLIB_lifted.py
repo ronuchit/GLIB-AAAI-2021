@@ -111,7 +111,7 @@ class GLIBLCuriosityModule(GoalBabblingCuriosityModule):
         self._untried_episode_goal_actions = copy.deepcopy(self._unseen_goal_actions)
         # Randomly shuffle within num_lits
         self._untried_episode_goal_actions = sorted(self._untried_episode_goal_actions,
-            key=lambda ga : (len(ga[0]), self._rand_state.uniform()))
+            key=self._get_goal_action_priority)
         if self._ignore_statics:  # ignore static goals
             static_preds = self._compute_static_preds()
             self._untried_episode_goal_actions = list(filter(
@@ -124,6 +124,9 @@ class GLIBLCuriosityModule(GoalBabblingCuriosityModule):
                 self._untried_episode_goal_actions))
         # Forget the goal-action that was going to be taken at the end of the plan in progress
         self._current_goal_action = None
+
+    def _get_goal_action_priority(self, goal_action):
+        return (len(goal_action[0]), self._rand_state.uniform())
 
     def reset_episode(self, state):
         super().reset_episode(state)
@@ -259,13 +262,22 @@ class GLIBL2CuriosityModule(GLIBLCuriosityModule):
 class LLMGLIBL2CuriosityModule(GLIBL2CuriosityModule):
 
     def _initialize(self):
-        super()._initialize()
         # TODO: Incredibly hacky, fix up!
         prompt = self._create_prompt()
         llm_output = self._query_llm(prompt)
         llm_operators = self._llm_output_to_operators(llm_output)
-        self._planning_module = copy.deepcopy(self._planning_module)
-        self._planning_module._learned_operators = llm_operators
+        self._llm_goal_actions = []
+        for op in llm_operators:
+            action = [p for p in op.preconds.literals
+                if p.predicate in self._action_space.predicates][0]
+            goal = tuple(sorted(set(op.preconds.literals) - {action}))
+            self._llm_goal_actions.append((goal, action))
+        super()._initialize()
+
+    def _init_unseen_goal_actions(self, action_predicates, observation_predicates, max_num_lits):
+        unseen_goal_actions = super()._init_unseen_goal_actions(action_predicates, observation_predicates, max_num_lits)
+        unseen_goal_actions.update(self._llm_goal_actions)
+        return unseen_goal_actions
     
     def _create_prompt(self):
         # TODO: use ac.train_env to extract predicates, operator names, and
@@ -444,7 +456,7 @@ class LLMGLIBL2CuriosityModule(GLIBL2CuriosityModule):
         
         # TODO: automatically handle this and other cases of malformed LLM output.
         # In this case, we need to add a missing parameter.
-        llm_output =llm_output.replace("""(:action unstack
+        llm_output = llm_output.replace("""(:action unstack
     :parameters (?r - robot ?x - block)""", """(:action unstack
     :parameters (?r - robot ?x - block ?y - block)""")
 
@@ -453,3 +465,9 @@ class LLMGLIBL2CuriosityModule(GLIBL2CuriosityModule):
             f.write(llm_output)
         domain = PDDLDomainParser(domain_fname)
         return list(domain.operators.values())
+
+    def _get_goal_action_priority(self, goal_action):
+        tiebreak = self._rand_state.uniform()
+        if goal_action in self._llm_goal_actions:
+            return (-1, tiebreak)
+        return (len(goal_action[0]), tiebreak)

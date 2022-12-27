@@ -59,7 +59,7 @@ class GoalBabblingCuriosityModule(BaseCuriosityModule):
             if not self._goal_is_valid(goal):
                 continue
 
-            # print("trying goal:",goal)
+            print("trying goal:",goal)
 
             # Create a pddl problem file with the goal and current state
             problem_fname = self._create_problem_pddl(
@@ -89,7 +89,7 @@ class GoalBabblingCuriosityModule(BaseCuriosityModule):
             self._plan = []
 
         # No plan found within budget; take a random action
-        # print("falling back to random")
+        print("falling back to random")
         return self._get_fallback_action(state)
 
     def _get_fallback_action(self, state):
