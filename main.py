@@ -76,10 +76,6 @@ class Runner:
     def run(self):
         """Run primitive operator learning loop.
         """
-        # MAJOR HACK. Only used by oracle_curiosity.py and by the LLM-based
-        # learner, which uses the environment to access the predicates and
-        # action names.
-        ac.train_env = self.train_env
         results = []
         episode_done = True
         episode_time_step = 0
@@ -214,6 +210,10 @@ def _run_single_seed(seed, domain_name, curiosity_name, learning_name):
 
     train_env = gym.make("PDDLEnv{}-v0".format(domain_name))
     train_env.seed(ec.seed)
+    # MAJOR HACK. Only used by oracle_curiosity.py and by the LLM-based
+    # learner, which uses the environment to access the predicates and
+    # action names.
+    ac.train_env = train_env
     agent = Agent(domain_name, train_env.action_space,
                   train_env.observation_space, curiosity_name, learning_name,
                   planning_module_name=ac.planner_name[domain_name])
